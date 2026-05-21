@@ -3,930 +3,607 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathScape: The Numerical Dungeon | Puzzle Adventure Matematika</title>
-    <meta name="description" content="Mainkan MathScape, game puzzle adventure matematika seru langsung di browser Anda. Pecahkan teka-teki, hindari musuh, dan taklukkan dungeon angka!">
-    <meta name="keywords" content="game matematika, puzzle adventure, game browser, javascript canvas, mathscape, game edukasi">
-    <meta name="author" content="Indie Game Dev">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="MathScape: The Numerical Dungeon">
-    <meta property="og:description" content="Pecahkan teka-teki matematika untuk meloloskan diri dari dungeon purba. Game indie berbasis JavaScript Canvas.">
-    
+    <title>MathemaQuest: Indie Math Puzzle Adventure</title>
     <style>
+        /* CSS Inti (Ditambahkan agar tampilan rapi dan fungsi pop-up berjalan) */
         :root {
-            --bg-color: #e0e5ec;
-            --container-bg: #f1f3f6;
-            --text-color: #313131;
-            --primary-color: #4b6cc1;
-            --shadow-1: rgba(0, 0, 0, 0.1);
-            --shadow-2: rgba(255, 255, 255, 0.7);
-            --accent-color: #e74c3c;
+            --bg-color: #111827;
+            --text-color: #f9fafb;
+            --panel-bg: #1f2937;
         }
-
-        [data-theme="dark"] {
-            --bg-color: #1a1a1a;
-            --container-bg: #2d2d2d;
-            --text-color: #f5f5f5;
-            --primary-color: #3a86ff;
-            --shadow-1: rgba(0, 0, 0, 0.5);
-            --shadow-2: rgba(255, 255, 255, 0.05);
-            --accent-color: #ff007f;
+        .light-theme {
+            --bg-color: #f3f4f6;
+            --text-color: #111827;
+            --panel-bg: #e5e7eb;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-        }
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             overflow-x: hidden;
             padding: 10px;
+            transition: background-color 0.3s, color 0.3s;
         }
-
         header {
-            width: 100%;
-            max-width: 900px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .controls-top {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            padding: 8px 16px;
-            border: none;
+            width: 100%;
+            max-width: 1050px;
+            padding: 15px;
+            background: var(--panel-bg);
             border-radius: 8px;
-            background: var(--container-bg);
-            color: var(--text-color);
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 3px 3px 6px var(--shadow-1), -3px -3px 6px var(--shadow-2);
-            transition: all 0.2s ease;
+            margin-bottom: 20px;
+            box-sizing: border-box;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            color: var(--primary-color);
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
         }
-
-        button:active {
-            transform: translateY(1px);
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1050px;
         }
-
-        #game-container {
+        .canvas-wrapper {
             position: relative;
-            width: 100%;
-            max-width: 800px;
-            aspect-ratio: 16 / 9;
             background: #000;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 10px 10px 20px var(--shadow-1), -10px -10px 20px var(--shadow-2);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-
         canvas {
-            width: 100%;
-            height: 100%;
             display: block;
         }
-
-        /* Overlay UI Screens */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        .sidebar {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 200px;
+            flex-grow: 1;
+        }
+        /* Overlay & Modals */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(0,0,0,0.85);
-            color: #fff;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-            z-index: 10;
-            padding: 20px;
+            z-index: 50;
+            color: white;
             text-align: center;
         }
-
-        .screen.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Loading Screen Specifics */
-        #loading-screen {
-            background: #0f172a;
-            pointer-events: auto;
-            opacity: 1;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #1e293b;
-            border-top: 5px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Quiz Overlay Style */
-        #quiz-overlay {
+        #puzzle-modal {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid var(--primary-color);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 30px;
             border-radius: 10px;
-            padding: 15px 25px;
+            text-align: center;
             color: white;
-            display: none;
+            border: 2px solid #3b82f6;
+        }
+        .hidden-element {
+            display: none !important;
+        }
+        /* Progress Bar */
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.15s linear;
+        }
+        /* Buttons & Inputs */
+        button {
+            cursor: pointer;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn { background: #3b82f6; color: white; }
+        .btn:hover:not(:disabled) { background: #2563eb; }
+        .btn.disabled { background: #475569; cursor: not-allowed; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        input[type="number"] {
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            text-align: center;
+        }
+        /* Mobile Controls */
+        .mobile-controls {
+            display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            z-index: 5;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            margin-top: 20px;
         }
-
-        #quiz-input {
-            padding: 8px;
-            border-radius: 5px;
-            border: none;
-            text-align: center;
-            font-size: 1.2rem;
-            width: 100px;
-            outline: none;
-        }
-
-        /* Mobile Controls */
-        #mobile-controls {
-            display: none;
-            width: 100%;
-            max-width: 800px;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding: 0 10px;
-        }
-
-        .dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 50px);
-            grid-template-rows: repeat(3, 50px);
-            gap: 5px;
-        }
-
-        .btn-action {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Leaderboard table style */
-        .leaderboard-table {
-            width: 100%;
-            max-width: 300px;
-            margin: 15px 0;
-            border-collapse: collapse;
-        }
-        .leaderboard-table th, .leaderboard-table td {
-            padding: 6px;
-            border-bottom: 1px solid #444;
-            text-align: left;
-        }
-
-        footer {
-            margin-top: auto;
-            padding: 20px;
-            font-size: 0.85rem;
-            text-align: center;
-            opacity: 0.7;
-        }
-
-        @media (max-width: 768px) {
-            #mobile-controls {
-                display: flex;
-            }
-            h1 { font-size: 1.2rem; }
-            button { padding: 6px 12px; font-size: 0.9rem; }
-        }
+        .row { display: flex; gap: 10px; }
+        .ctrl-btn { width: 50px; height: 50px; font-size: 20px; background: var(--panel-bg); color: var(--text-color); border: 1px solid #6b7280;}
+        .ctrl-btn:active { background: #3b82f6; color: white; }
     </style>
 </head>
-<body>
+<body class="dark-theme">
 
-    <header>
-        <h1>MathScape</h1>
-        <div class="controls-top">
-            <button id="btn-theme">🌓 Mode</button>
-            <button id="btn-audio">🔊 Audio</button>
-            <button id="btn-download" style="color: #27ae60;">📥 Download</button>
-        </div>
-    </header>
-
-    <main id="game-container">
-        <!-- Canvas Utama Game -->
-        <canvas id="gameCanvas" width="800" height="450"></canvas>
-
-        <!-- 1. LOADING SCREEN -->
-        <div id="loading-screen" class="screen active">
-            <div class="spinner"></div>
-            <h2>Memuat Memori Dungeon...</h2>
-            <p style="font-size: 0.9rem; color: #888; margin-top: 5px;">Menyintesis Audio & Grafis</p>
-        </div>
-
-        <!-- 2. MAIN MENU SCREEN -->
-        <div id="menu-screen" class="screen">
-            <h1 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 5px; text-shadow: 2px 2px #000;">MATHSCAPE</h1>
-            <p style="margin-bottom: 25px; color: #aaa;">The Numerical Dungeon Escape</p>
-            <div style="display: flex; gap: 15px;">
-                <button id="btn-start" style="padding: 12px 30px; font-size: 1.1rem;">Mulai Petualangan</button>
-                <button id="btn-reset-data" style="font-size: 0.9rem; opacity: 0.6;">Reset Progress</button>
-            </div>
-            <p style="margin-top: 20px; font-size: 0.8rem; color: #666;">Gunakan Arrow Keys / WASD & SPACE untuk bergerak/interaksi</p>
-        </div>
-
-        <!-- 3. GAME OVER SCREEN -->
-        <div id="gameover-screen" class="screen">
-            <h2 style="color: var(--accent-color); font-size: 2.5rem; margin-bottom: 10px;">Anda Gugur!</h2>
-            <p id="gameover-reason" style="margin-bottom: 20px;"></p>
-            <button id="btn-restart">Coba Lagi</button>
-        </div>
-
-        <!-- 4. VICTORY / END SCREEN -->
-        <div id="victory-screen" class="screen">
-            <h2 style="color: #2ecc71; font-size: 2.5rem; margin-bottom: 5px;">Kebebasan Diraih!</h2>
-            <p style="color: #aaa; margin-bottom: 15px;">Anda berhasil memecahkan kutukan angka dungeon.</p>
-            <h3 id="final-score-text"></h3>
-            
-            <table class="leaderboard-table">
-                <thead><tr><th>Pos</th><th>Waktu Selesai</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
-
-            <button id="btn-menu-return">Kembali ke Menu</button>
-        </div>
-
-        <!-- Interactive HUD Quiz Overlay -->
-        <div id="quiz-overlay">
-            <p id="quiz-question" style="font-weight: 600; font-size: 1.1rem;"></p>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="quiz-input" placeholder="?" autocomplete="off">
-                <button id="btn-submit-quiz">Jawab</button>
-            </div>
-            <p style="font-size: 0.75rem; color: #aaa;">Tekan ENTER untuk mengirim jawaban</p>
-        </div>
-    </main>
-
-    <!-- Kontrol Mobile / On-Screen D-Pad -->
-    <div id="mobile-controls">
-        <div class="dpad">
-            <div></div><button class="btn-action" id="pad-up">▲</button><div></div>
-            <button class="btn-action" id="pad-left">◀</button><div></div><button class="btn-action" id="pad-right">▶</button>
-            <div></div><button class="btn-action" id="pad-down">▼</button><div></div>
-        </div>
-        <div style="display: flex; align-items: center;">
-            <button class="btn-action" id="pad-action" style="background: var(--primary-color); color: white;">⚿</button>
+    <div id="loading-screen" class="overlay">
+        <div class="loader-content">
+            <h1>MATHEMA QUEST</h1>
+            <p>Menyiapkan dungeon matematika...</p>
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <button id="start-btn" class="btn disabled" disabled>MULAI PETUALANGAN</button>
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2026 MathScape Project. Optimasi Mandiri Tanpa Dependensi.</p>
-    </footer>
+    <header>
+        <div class="game-title">🧮 MathemaQuest</div>
+        <div class="controls-panel">
+            <button id="theme-toggle" class="icon-btn" title="Ubah Tema">🌓 Toggle Tema</button>
+            <button id="mute-toggle" class="icon-btn" title="Mute Suara">🔊 Mute</button>
+            <button id="download-btn" class="btn-success">💾 Unduh Game Code</button>
+        </div>
+    </header>
 
-<script>
-        // ==========================================
-        // 1. SOUND SYNTHESIZER ENGINE (Web Audio API)
-        // ==========================================
-        const AudioEngine = {
-            ctx: null,
-            enabled: true,
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            },
-            playTone(freq, type, duration, vol) {
-                if (!this.enabled || !this.ctx) return;
-                try {
-                    let osc = this.ctx.createOscillator();
-                    let gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + duration);
-                } catch(e) { console.log("Audio play blocked or failed."); }
-            },
-            playBGM() {
-                if (!this.enabled || !this.ctx) return;
-                if(this.bgmInterval) clearInterval(this.bgmInterval);
-                let notes = [110, 130, 146, 165];
-                let step = 0;
-                this.bgmInterval = setInterval(() => {
-                    if(Game.state === 'PLAYING') {
-                        this.playTone(notes[step % notes.length], 'triangle', 1.2, 0.08);
-                        step++;
-                    }
-                }, 1500);
-            },
-            stopBGM() {
-                if(this.bgmInterval) clearInterval(this.bgmInterval);
-            },
-            sfxMove() { this.playTone(180, 'sine', 0.08, 0.1); },
-            sfxCorrect() { 
-                this.playTone(523.25, 'sine', 0.1, 0.15);
-                setTimeout(() => this.playTone(659.25, 'sine', 0.15, 0.15), 100);
-            },
-            sfxWrong() { this.playTone(150, 'sawtooth', 0.2, 0.2); },
-            sfxHurt() { this.playTone(90, 'square', 0.3, 0.25); }
-        };
+    <main class="game-container">
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="450"></canvas>
+            
+            <div id="puzzle-modal" class="hidden-element">
+                <div class="modal-content">
+                    <h3>🔒 PINTU TERKUNCI!</h3>
+                    <p id="puzzle-question">Berapakah hasil dari 12 + 15?</p>
+                    <input type="number" id="puzzle-answer" placeholder="Jawaban kamu..." autocomplete="off">
+                    <button id="submit-answer-btn" class="btn">Buka Pintu</button>
+                </div>
+            </div>
+        </div>
 
-        // ==========================================
-        // 2. CONFIG & MAP DATABASES
-        // ==========================================
-        const TILE_SIZE = 32;
-        const MAP_WIDTH = 25;  
-        const MAP_HEIGHT = 14; 
+        <aside class="sidebar">
+            <div class="status-box">
+                <h3>Statistik Permainan</h3>
+                <p>Level Saat Ini: <span id="ui-level">1</span></p>
+                <p>Nyawa Tersisa: <span id="ui-lives">❤️❤️❤️</span></p>
+                <p>Waktu Berjalan: <span id="ui-timer">00:00</span></p>
+            </div>
 
-        const TILES = { WALL: 1, FLOOR: 0, DOOR: 2, SPIKE: 3, CHEST: 4 };
+            <div class="leaderboard-box">
+                <h3>Papan Peringkat Lokal</h3>
+                <ol id="leaderboard-list">
+                    <li>Belum ada rekor terdaftar</li>
+                </ol>
+            </div>
+        </aside>
+    </main>
 
-        const LEVELS = [
-            {
-                map: [
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                    [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,2,1],
-                    [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1],
-                    [1,0,1,0,0,0,1,4,1,0,0,0,1,4,1,0,0,0,1,0,0,0,0,0,1],
-                    [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,1,0,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ],
-                playerStart: {x: 1, y: 3},
-                enemies: [{x: 9, y: 1, dir: 1, range: 4, speed: 0.05}],
-                puzzles: [
-                    {x: 7, y: 3, q: "5 + 3 = ?", a: 8, solved: false},
-                    {x: 13, y: 3, q: "12 - 4 = ?", a: 8, solved: false},
-                    {x: 21, y: 5, q: "2 x 4 = ?", a: 8, solved: false}
-                ]
-            },
-            {
-                map: [
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                    [1,0,0,0,0,0,1,4,1,0,0,0,0,0,1,4,1,0,0,0,0,0,0,0,1],
-                    [1,0,1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1],
-                    [1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-                    [1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ],
-                playerStart: {x: 1, y: 1},
-                enemies: [
-                    {x: 3, y: 5, dir: 1, range: 6, speed: 0.07},
-                    {x: 12, y: 1, dir: 1, range: 4, speed: 0.06}
-                ],
-                puzzles: [
-                    {x: 7, y: 1, q: "15 - (3 x 2) = ?", a: 9, solved: false},
-                    {x: 15, y: 1, q: "Akar kuadrat dari 81?", a: 9, solved: false}
-                ]
-            },
-            {
-                map: [
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                    [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,4,1,0,0,0,0,0,1],
-                    [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1],
-                    [1,0,1,0,0,0,1,4,1,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
-                    [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,2,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ],
-                playerStart: {x: 1, y: 1},
-                enemies: [
-                    {x: 5, y: 1, dir: 1, range: 4, speed: 0.08},
-                    {x: 13, y: 5, dir: -1, range: 5, speed: 0.09}
-                ],
-                puzzles: [
-                    {x: 7, y: 3, q: "Variabel x jika 2x - 4 = 10", a: 7, solved: false},
-                    {x: 17, y: 1, q: "Nilai prima terkecil setelah 5?", a: 7, solved: false}
-                ]
-            }
-        ];
+    <div class="mobile-controls">
+        <button class="ctrl-btn" id="ctrl-up">🔼</button>
+        <div class="row">
+            <button class="ctrl-btn" id="ctrl-left">◀️</button>
+            <button class="ctrl-btn" id="ctrl-action">⤶</button>
+            <button class="ctrl-btn" id="ctrl-right">▶️</button>
+        </div>
+        <button class="ctrl-btn" id="ctrl-down">🔽</button>
+    </div>
 
-        // ==========================================
-        // 3. CORE GAME APPLICATION OBJECT
-        // ==========================================
-        const Game = {
-            canvas: null,
-            ctx: null,
-            state: 'LOADING', 
-            currentLevelIndex: 0,
+    <script>
+        // Konfigurasi Inti Game Engine
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State Management
+        let gameState = {
+            level: 1,
+            lives: 3,
+            score: 0,
             timer: 0,
             timerInterval: null,
-            transitionAlpha: 0,
-            isTransitioning: false,
-            activePuzzle: null,
-
-            player: {
-                x: 0, y: 0,
-                targetX: 0, targetY: 0,
-                gridX: 0, gridY: 0,
-                hp: 3,
-                maxHp: 3,
-                animFrame: 0,
-                invulnerable: false,
-                invulnTimer: 0
-            },
-            enemies: [],
-            currentMap: [],
-            puzzles: [],
-
-            init() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.ctx.imageSmoothingEnabled = false;
-
-                this.setupDOMEvents();
-                this.loadProgress();
-
-                setTimeout(() => {
-                    this.state = 'MENU';
-                    this.switchScreen('menu-screen');
-                }, 1000);
-
-                requestAnimationFrame((t) => this.loop(t));
-            },
-
-            switchScreen(screenId) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                if (screenId) document.getElementById(screenId).classList.add('active');
-            },
-
-            setupDOMEvents() {
-                document.getElementById('btn-theme').addEventListener('click', () => {
-                    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                    document.documentElement.setAttribute('data-theme', theme);
-                });
-
-                document.getElementById('btn-audio').addEventListener('click', (e) => {
-                    AudioEngine.init(); 
-                    AudioEngine.enabled = !AudioEngine.enabled;
-                    e.target.innerText = AudioEngine.enabled ? "🔊 Audio" : "🔇 Mute";
-                    if(AudioEngine.enabled && this.state === 'PLAYING') AudioEngine.playBGM();
-                    else AudioEngine.stopBGM();
-                });
-
-                document.getElementById('btn-start').addEventListener('click', () => {
-                    AudioEngine.init();
-                    this.startNewOrResumeGame();
-                });
-                
-                document.getElementById('btn-restart').addEventListener('click', () => this.restartCurrentLevel());
-                document.getElementById('btn-menu-return').addEventListener('click', () => {
-                    this.switchScreen('menu-screen');
-                    this.state = 'MENU';
-                });
-                document.getElementById('btn-reset-data').addEventListener('click', () => {
-                    if(confirm("Hapus semua data penyimpanan game?")) {
-                        localStorage.removeItem('mathscape_progress');
-                        this.currentLevelIndex = 0;
-                        this.timer = 0;
-                        alert("Data dihapus!");
-                    }
-                });
-
-                document.getElementById('btn-submit-quiz').addEventListener('click', () => this.checkQuizAnswer());
-                document.getElementById('quiz-input').addEventListener('keydown', (e) => {
-                    if(e.key === 'Enter') this.checkQuizAnswer();
-                });
-
-                window.addEventListener('keydown', (e) => {
-                    if (this.state !== 'PLAYING' || this.activePuzzle) return;
-                    let dx = 0, dy = 0;
-                    if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') dy = -1;
-                    if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') dy = 1;
-                    if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') dx = -1;
-                    if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') dx = 1;
-                    if (e.key === ' ') this.interactAction();
-
-                    if (dx !== 0 || dy !== 0) {
-                        this.movePlayer(dx, dy);
-                        e.preventDefault();
-                    }
-                });
-
-                const mapMobile = (id, action) => {
-                    document.getElementById(id).addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        action();
-                    });
-                };
-                mapMobile('pad-up', () => this.movePlayer(0, -1));
-                mapMobile('pad-down', () => this.movePlayer(0, 1));
-                mapMobile('pad-left', () => this.movePlayer(-1, 0));
-                mapMobile('pad-right', () => this.movePlayer(1, 0));
-                mapMobile('pad-action', () => this.interactAction());
-
-                document.getElementById('btn-download').addEventListener('click', () => {
-                    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-                    const blob = new Blob([htmlContent], { type: 'text/html' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'MathScape_Offline.html';
-                    a.click();
-                });
-            },
-
-            startNewOrResumeGame() {
-                this.switchScreen(null);
-                this.state = 'PLAYING';
-                this.loadLevel(this.currentLevelIndex);
-                
-                if(this.timerInterval) clearInterval(this.timerInterval);
-                this.timerInterval = setInterval(() => {
-                    if(this.state === 'PLAYING' && !this.activePuzzle) this.timer++;
-                }, 1000);
-
-                AudioEngine.playBGM();
-            },
-
-            loadLevel(index) {
-                if (index >= LEVELS.length) {
-                    this.triggerVictory();
-                    return;
-                }
-
-                this.isTransitioning = true;
-                this.transitionAlpha = 0;
-
-                const data = JSON.parse(JSON.stringify(LEVELS[index]));
-                this.currentMap = data.map;
-                this.puzzles = data.puzzles;
-                
-                this.enemies = data.enemies.map(e => ({
-                    ...e,
-                    x: e.x * TILE_SIZE,
-                    y: e.y * TILE_SIZE,
-                    startX: e.x * TILE_SIZE,
-                    gridY: e.y
-                }));
-
-                this.player.gridX = data.playerStart.x;
-                this.player.gridY = data.playerStart.y;
-                this.player.x = data.playerStart.x * TILE_SIZE;
-                this.player.y = data.playerStart.y * TILE_SIZE;
-                this.player.targetX = this.player.x;
-                this.player.targetY = this.player.y;
-                this.player.hp = 3;
-                this.player.invulnerable = false;
-
-                this.saveProgress();
-            },
-
-            restartCurrentLevel() {
-                this.switchScreen(null);
-                this.state = 'PLAYING';
-                this.loadLevel(this.currentLevelIndex);
-            },
-
-            movePlayer(dx, dy) {
-                if (this.isTransitioning) return;
-                
-                let nextX = this.player.gridX + dx;
-                let nextY = this.player.gridY + dy;
-
-                if(nextY < 0 || nextY >= this.currentMap.length || nextX < 0 || nextX >= this.currentMap[0].length) return;
-
-                let targetTile = this.currentMap[nextY][nextX];
-
-                if (targetTile !== TILES.WALL) {
-                    if (targetTile === TILES.DOOR && !this.checkAllPuzzlesSolved()) return;
-                    if (targetTile === TILES.DOOR && this.checkAllPuzzlesSolved()) {
-                        this.nextLevelTransition();
-                        return;
-                    }
-
-                    this.player.gridX = nextX;
-                    this.player.gridY = nextY;
-                    this.player.targetX = nextX * TILE_SIZE;
-                    this.player.targetY = nextY * TILE_SIZE;
-                    AudioEngine.sfxMove();
-                }
-            },
-
-            interactAction() {
-                const p = this.puzzles.find(pz => 
-                    Math.abs(pz.x - this.player.gridX) <= 1 && 
-                    Math.abs(pz.y - this.player.gridY) <= 1 && !pz.solved
-                );
-
-                if (p) {
-                    this.activePuzzle = p;
-                    document.getElementById('quiz-question').innerText = p.q;
-                    document.getElementById('quiz-input').value = "";
-                    document.getElementById('quiz-overlay').style.display = 'flex';
-                    document.getElementById('quiz-input').focus();
-                }
-            },
-
-            checkQuizAnswer() {
-                if (!this.activePuzzle) return;
-                const ans = parseInt(document.getElementById('quiz-input').value);
-                
-                if (ans === this.activePuzzle.a) {
-                    AudioEngine.sfxCorrect();
-                    this.activePuzzle.solved = true;
-                    document.getElementById('quiz-overlay').style.display = 'none';
-                    this.activePuzzle = null;
-                    
-                    if(this.checkAllPuzzlesSolved()) {
-                        AudioEngine.playTone(880, 'sine', 0.4, 0.1);
-                    }
-                } else {
-                    AudioEngine.sfxWrong();
-                    this.player.hp--;
-                    this.player.invulnerable = true;
-                    this.player.invulnTimer = 30; 
-                    
-                    if(this.player.hp <= 0) {
-                        document.getElementById('quiz-overlay').style.display = 'none';
-                        this.activePuzzle = null;
-                        this.triggerGameOver("Gagal menjawab formula pengunci peti kutukan.");
-                    } else {
-                        alert("Jawaban salah! Energi kehidupan Anda berkurang 1.");
-                    }
-                }
-            },
-
-            checkAllPuzzlesSolved() {
-                return this.puzzles.every(p => p.solved);
-            },
-
-            nextLevelTransition() {
-                this.currentLevelIndex++;
-                if (this.currentLevelIndex >= LEVELS.length) {
-                    this.triggerVictory();
-                } else {
-                    this.loadLevel(this.currentLevelIndex);
-                }
-            },
-
-            triggerGameOver(reason) {
-                this.state = 'GAMEOVER';
-                AudioEngine.stopBGM();
-                AudioEngine.sfxHurt();
-                document.getElementById('gameover-reason').innerText = reason;
-                this.switchScreen('gameover-screen');
-            },
-
-            triggerVictory() {
-                this.state = 'VICTORY';
-                AudioEngine.stopBGM();
-                document.getElementById('final-score-text').innerText = `Total Waktu: ${this.timer} Detik`;
-                
-                this.saveLeaderboard(this.timer);
-                this.showLeaderboard();
-                this.switchScreen('victory-screen');
-                
-                localStorage.removeItem('mathscape_progress');
-                this.currentLevelIndex = 0;
-                this.timer = 0;
-            },
-
-            saveProgress() {
-                const stateData = { levelIndex: this.currentLevelIndex, timer: this.timer };
-                localStorage.setItem('mathscape_progress', JSON.stringify(stateData));
-            },
-
-            loadProgress() {
-                const data = localStorage.getItem('mathscape_progress');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    this.currentLevelIndex = parsed.levelIndex;
-                    this.timer = parsed.timer;
-                }
-            },
-
-            saveLeaderboard(score) {
-                let scores = JSON.parse(localStorage.getItem('mathscape_leaderboard')) || [];
-                scores.push(score);
-                scores.sort((a, b) => a - b); 
-                scores = scores.slice(0, 5);  
-                localStorage.setItem('mathscape_leaderboard', JSON.stringify(scores));
-            },
-
-            showLeaderboard() {
-                const scores = JSON.parse(localStorage.getItem('mathscape_leaderboard')) || [];
-                const tbody = document.getElementById('leaderboard-body');
-                tbody.innerHTML = scores.map((s, index) => `<tr><td>#${index+1}</td><td>${s} Detik</td></tr>`).join('');
-            },
-
-            update() {
-                // PERBAIKAN UTAMA: Jangan jalankan update logika & transisi jika game tidak sedang dimainkan
-                if (this.state !== 'PLAYING') {
-                    this.transitionAlpha = 0;
-                    return;
-                }
-
-                this.player.x += (this.player.targetX - this.player.x) * 0.2;
-                this.player.y += (this.player.targetY - this.player.y) * 0.2;
-
-                if(Math.abs(this.player.x - this.player.targetX) > 0.5) {
-                    this.player.animFrame += 0.1;
-                }
-
-                if(this.player.invulnerable) {
-                    this.player.invulnTimer--;
-                    if(this.player.invulnTimer <= 0) this.player.invulnerable = false;
-                }
-
-                this.enemies.forEach(e => {
-                    e.x += e.dir * (e.speed * TILE_SIZE);
-                    if (Math.abs(e.x - e.startX) >= e.range * TILE_SIZE || e.x < 0) {
-                        e.dir *= -1;
-                    }
-
-                    if (!this.player.invulnerable && 
-                        Math.abs(e.x - this.player.x) < TILE_SIZE * 0.7 && 
-                        Math.abs(e.y - this.player.y) < TILE_SIZE * 0.7) {
-                        
-                        this.player.hp--;
-                        AudioEngine.sfxHurt();
-                        this.player.invulnerable = true;
-                        this.player.invulnTimer = 45;
-
-                        this.player.gridX = LEVELS[this.currentLevelIndex].playerStart.x;
-                        this.player.gridY = LEVELS[this.currentLevelIndex].playerStart.y;
-                        this.player.targetX = this.player.gridX * TILE_SIZE;
-                        this.player.targetY = this.player.gridY * TILE_SIZE;
-
-                        if (this.player.hp <= 0) {
-                            this.triggerGameOver("Hancur lebur ditabrak oleh entitas patroli penjaga gerbang angka.");
-                        }
-                    }
-                });
-
-                if (this.isTransitioning) {
-                    this.transitionAlpha += 0.05;
-                    if (this.transitionAlpha >= 1) this.isTransitioning = false;
-                } else if (this.transitionAlpha > 0) {
-                    this.transitionAlpha -= 0.05;
-                }
-            },
-
-            draw() {
-                // Bersihkan background canvas utama
-                this.ctx.fillStyle = '#111';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // PERBAIKAN UTAMA: Canvas tetap membersihkan layar meskipun state bukan PLAYING, tapi gambar objek di-skip
-                if (this.state !== 'PLAYING' && this.state !== 'GAMEOVER') {
-                    return;
-                }
-
-                let offsetX = Math.floor((this.canvas.width - (MAP_WIDTH * TILE_SIZE)) / 2);
-                let offsetY = Math.floor((this.canvas.height - (this.currentMap.length * TILE_SIZE)) / 2);
-
-                this.ctx.save();
-                this.ctx.translate(offsetX, offsetY);
-
-                for (let r = 0; r < this.currentMap.length; r++) {
-                    for (let c = 0; c < this.currentMap[r].length; c++) {
-                        let tile = this.currentMap[r][c];
-                        let tx = c * TILE_SIZE;
-                        let ty = r * TILE_SIZE;
-
-                        if (tile === TILES.WALL) {
-                            this.ctx.fillStyle = '#475569';
-                            this.ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                            this.ctx.strokeStyle = '#334155';
-                            this.ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                        } else {
-                            this.ctx.fillStyle = '#1e293b';
-                            this.ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                            this.ctx.strokeStyle = '#0f172a';
-                            this.ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                        }
-
-                        if (tile === TILES.DOOR) {
-                            let open = this.checkAllPuzzlesSolved();
-                            this.ctx.fillStyle = open ? '#2ecc71' : '#e74c3c';
-                            this.ctx.fillRect(tx + 4, ty, TILE_SIZE - 8, TILE_SIZE);
-                            this.ctx.fillStyle = '#fff';
-                            this.ctx.font = '10px sans-serif';
-                            this.ctx.fillText(open ? "OPEN" : "LOCK", tx + 6, ty + 18);
-                        }
-                    }
-                }
-
-                this.puzzles.forEach(p => {
-                    let px = p.x * TILE_SIZE;
-                    let py = p.y * TILE_SIZE;
-                    this.ctx.fillStyle = p.solved ? '#78716c' : '#d97706';
-                    this.ctx.fillRect(px + 4, py + 6, TILE_SIZE - 8, TILE_SIZE - 10);
-                    if(!p.solved) {
-                        this.ctx.strokeStyle = '#f59e0b';
-                        this.ctx.strokeRect(px + 4, py + 6, TILE_SIZE - 8, TILE_SIZE - 10);
-                        this.ctx.fillStyle = '#fff';
-                        this.ctx.font = 'bold 12px monospace';
-                        this.ctx.fillText("?", px + 12, py + 22);
-                    }
-                });
-
-                this.enemies.forEach(e => {
-                    this.ctx.fillStyle = '#991b1b'; 
-                    this.ctx.beginPath();
-                    this.ctx.arc(e.x + TILE_SIZE/2, e.y + TILE_SIZE/2, TILE_SIZE/2 - 4, 0, Math.PI*2);
-                    this.ctx.fill();
-                    this.ctx.fillStyle = '#fff';
-                    this.ctx.fillRect(e.x + (e.dir > 0 ? 18 : 6), e.y + 10, 4, 4);
-                });
-
-                if (!this.player.invulnerable || Math.floor(this.player.invulnTimer / 4) % 2 === 0) {
-                    this.ctx.fillStyle = '#3b82f6'; 
-                    let bobbing = Math.sin(this.player.animFrame) * 2; 
-                    this.ctx.fillRect(this.player.x + 6, this.player.y + 4 + bobbing, TILE_SIZE - 12, TILE_SIZE - 6 - bobbing);
-                    
-                    this.ctx.fillStyle = '#eab308';
-                    this.ctx.fillRect(this.player.x + 6, this.player.y + 8 + bobbing, TILE_SIZE - 12, 4);
-                }
-
-                this.ctx.restore();
-
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                this.ctx.fillRect(0, 0, this.canvas.width, 40);
-
-                this.ctx.fillStyle = '#fff';
-                this.ctx.font = '14px Arial';
-                this.ctx.fillText(`LEVEL: ${this.currentLevelIndex + 1} / ${LEVELS.length}`, 20, 25);
-                this.ctx.fillText(`WAKTU: ${this.timer}s`, 160, 25);
-
-                let hpStr = "";
-                for(let i=0; i<this.player.maxHp; i++) hpStr += i < this.player.hp ? "❤️" : "🖤";
-                this.ctx.fillText(`NYAWA: ${hpStr}`, 300, 24);
-
-                if(this.checkAllPuzzlesSolved()) {
-                    this.ctx.fillStyle = '#2ecc71';
-                    this.ctx.fillText("PINTU DUNGEON TERBUKA! Segera menuju Exit Portal.", 500, 25);
-                } else {
-                    this.ctx.fillStyle = '#f1c40f';
-                    this.ctx.fillText("Pecahkan semua misteri kotak angka!", 500, 25);
-                }
-
-                if (this.transitionAlpha > 0) {
-                    this.ctx.fillStyle = `rgba(0, 0, 0, ${this.transitionAlpha})`;
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-            },
-
-            loop(timestamp) {
-                this.update();
-                this.draw();
-                requestAnimationFrame((t) => this.loop(t));
-            }
+            isPlaying: false,
+            isMuted: false,
+            savedProgress: null
         };
 
-        window.addEventListener('DOMContentLoaded', () => Game.init());
-</script>
+        // Data Posisi Entitas (Pemain, Musuh, Pintu Keluar)
+        let player = { x: 50, y: 200, size: 25, speed: 4, color: '#6366f1' };
+        let door = { x: 720, y: 190, width: 30, height: 50, isLocked: true, color: '#f59e0b' };
+        let enemies = [];
+        let currentPuzzle = { question: '', answer: 0 };
+        let levelTransitionAlpha = 0;
+
+        // Web Audio API Synthesizer (Pengganti file MP3 eksternal agar bebas hak cipta)
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (gameState.isMuted || !audioCtx) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.log("Audio error contextual context:", e); }
+        }
+
+        // Chiptune Procedural Music Loop
+        function playBackgroundMusic() {
+            if (!gameState.isPlaying || gameState.isMuted) return;
+            let notes = [261.63, 329.63, 392.00, 523.25]; // Akor C Major
+            notes.forEach((note, index) => {
+                setTimeout(() => {
+                    if(gameState.isPlaying) playTone(note, 'triangle', 0.4, 0.05);
+                }, index * 350);
+            });
+        }
+        let musicInterval = setInterval(playBackgroundMusic, 1500);
+
+        // Input Handling (Keyboard & Touch)
+        let keys = {};
+        window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+        window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+        // Simulasi Loading Screen Realistis
+        let progress = 0;
+        const progressFill = document.querySelector('.progress-fill');
+        const startBtn = document.getElementById('start-btn');
+        const loadingInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 15) + 5;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadingInterval);
+                startBtn.classList.remove('disabled');
+                startBtn.removeAttribute('disabled');
+            }
+            progressFill.style.width = progress + '%';
+        }, 150);
+
+        // Memulai Game dari Menu Loading
+        startBtn.addEventListener('click', () => {
+            document.getElementById('loading-screen').style.display = 'none';
+            initAudio();
+            loadGameProgress();
+            gameState.isPlaying = true;
+            startTimer();
+            generateLevelData();
+            gameLoop();
+        });
+
+        // Generator Teka-Teki Matematika Sesuai Skala Level
+        function generateMathPuzzle(level) {
+            let num1 = Math.floor(Math.random() * (level * 10)) + 2;
+            let num2 = Math.floor(Math.random() * (level * 10)) + 2;
+            let operators = ['+', '-', '*'];
+            let op = operators[Math.floor(Math.random() * Math.min(level, operators.length))];
+            
+            if (op === '-') { if (num1 < num2) { let t = num1; num1 = num2; num2 = t; } }
+
+            let questionText = `Berapakah hasil dari: ${num1} ${op} ${num2}?`;
+            let answerValue = 0;
+
+            switch(op) {
+                case '+': answerValue = num1 + num2; break;
+                case '-': answerValue = num1 - num2; break;
+                case '*': answerValue = num1 * num2; break;
+            }
+            return { question: questionText, answer: answerValue };
+        }
+
+        // Inisialisasi Desain Map Tingkat Kesulitan Level Berdasarkan Skala Dungeon
+        function generateLevelData() {
+            door.isLocked = true;
+            currentPuzzle = generateMathPuzzle(gameState.level);
+            
+            player.x = 50; player.y = 200;
+            
+            enemies = [];
+            let enemyCount = Math.min(gameState.level + 1, 5);
+            for(let i=0; i < enemyCount; i++) {
+                enemies.push({
+                    x: 200 + (i * 100),
+                    y: Math.random() * 350 + 50,
+                    size: 20,
+                    speedY: (Math.random() * 2 + 1) * (Math.random() > 0.5 ? 1 : -1),
+                    color: '#ef4444'
+                });
+            }
+            updateUI();
+            saveGameProgress();
+        }
+
+        // Deteksi Logika Pergerakan Objek Fisika & Tabrakan Objek (Collisions)
+        function updateGamePhysics() {
+            if (!gameState.isPlaying) return;
+
+            // Gerak Vertikal / Horizontal Keyboard
+            if (keys['arrowup'] || keys['w']) player.y -= player.speed;
+            if (keys['arrowdown'] || keys['s']) player.y += player.speed;
+            if (keys['arrowleft'] || keys['a']) player.x -= player.speed;
+            if (keys['arrowright'] || keys['d']) player.x += player.speed;
+
+            // Batasan Dinding Pembatas Canvas
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.size > canvas.width) player.x = canvas.width - player.size;
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.size > canvas.height) player.y = canvas.height - player.size;
+
+            // Pembaruan Logika Pergerakan Patroli Musuh
+            enemies.forEach(enemy => {
+                enemy.y += enemy.speedY;
+                if (enemy.y <= 0 || enemy.y + enemy.size >= canvas.height) {
+                    enemy.speedY *= -1;
+                }
+
+                // Cek Deteksi Tabrakan
+                if (player.x < enemy.x + enemy.size && player.x + player.size > enemy.x &&
+                    player.y < enemy.y + enemy.size && player.y + player.size > enemy.y) {
+                        gameState.lives--;
+                        playTone(150, 'sawtooth', 0.3, 0.2);
+                        player.x = 50; player.y = 200;
+                        updateUI();
+                        
+                        if (gameState.lives <= 0) {
+                            gameOver();
+                        }
+                }
+            });
+
+            // Deteksi Kontak Pemain dengan Pintu Keluar
+            if (player.x + player.size >= door.x && player.y + player.size >= door.y && player.y <= door.y + door.height) {
+                if (door.isLocked) {
+                    triggerMathModal();
+                } else {
+                    nextLevelClear();
+                }
+            }
+        }
+
+        // Aktivasi Pintu Modal Teka-teki Matematika
+        function triggerMathModal() {
+            keys = {}; // Bersihkan input keyboard
+            document.getElementById('puzzle-question').innerText = currentPuzzle.question;
+            const modal = document.getElementById('puzzle-modal');
+            modal.classList.remove('hidden-element');
+            document.getElementById('puzzle-answer').focus();
+        }
+
+        // Validasi Jawaban Input Pemain
+        document.getElementById('submit-answer-btn').addEventListener('click', checkUserAnswer);
+        document.getElementById('puzzle-answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkUserAnswer();
+        });
+
+        function checkUserAnswer() {
+            const answerInput = document.getElementById('puzzle-answer').value;
+            // Cegah submit jika kosong
+            if(answerInput === "") return; 
+
+            const userAnswer = parseInt(answerInput);
+            const modal = document.getElementById('puzzle-modal');
+            
+            if (userAnswer === currentPuzzle.answer) {
+                playTone(600, 'sine', 0.2, 0.1);
+                setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100);
+                door.isLocked = false;
+                modal.classList.add('hidden-element');
+                document.getElementById('puzzle-answer').value = '';
+                // Mundurkan player sedikit agar tidak tersangkut modal berulang kali
+                player.x -= 20; 
+            } else {
+                playTone(100, 'square', 0.5, 0.2);
+                gameState.lives--;
+                updateUI();
+                alert("Jawaban salah! Pintu tetap terkunci, energi nyawa berkurang.");
+                modal.classList.add('hidden-element');
+                document.getElementById('puzzle-answer').value = '';
+                player.x -= 30; // Mundurkan player setelah salah
+                if (gameState.lives <= 0) gameOver();
+            }
+        }
+
+        // Fungsi Efek Transisi Masuk Level Baru
+        function nextLevelClear() {
+            gameState.level++;
+            gameState.score += 100 * gameState.level;
+            playTone(523.25, 'sine', 0.1); 
+            playTone(659.25, 'sine', 0.1);
+            playTone(783.99, 'sine', 0.3);
+            
+            levelTransitionAlpha = 1;
+            generateLevelData();
+        }
+
+        // Siklus Penggambaran Objek Grafis Canvas (Render Loop)
+        function drawVisuals() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Gambar Latar Belakang Kamar Dungeon
+            ctx.fillStyle = document.body.classList.contains('light-theme') ? '#e5e7eb' : '#1f2937';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Menggambar Pintu Level Keluar
+            ctx.fillStyle = door.isLocked ? door.color : '#10b981';
+            ctx.fillRect(door.x, door.y, door.width, door.height);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(door.x + 5, door.y + 22, 6, 6);
+
+            // Menggambar Karakter Utama
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 15, player.y + 5, 6, 6);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x + 19, player.y + 5, 3, 3);
+
+            // Menggambar Seluruh Musuh
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(enemy.x + 6, enemy.y + 6, 8, 8);
+            });
+
+            // Menggambar Efek Transisi Layar
+            if (levelTransitionAlpha > 0) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${levelTransitionAlpha})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                levelTransitionAlpha -= 0.05;
+            }
+        }
+
+        // Game Loop Inti
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            updateGamePhysics();
+            drawVisuals();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Pengelolaan Sistem Manajemen Waktu / Timer Run
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                if(gameState.isPlaying) {
+                    gameState.timer++;
+                    let mins = Math.floor(gameState.timer / 60).toString().padStart(2, '0');
+                    let secs = (gameState.timer % 60).toString().padStart(2, '0');
+                    document.getElementById('ui-timer').innerText = `${mins}:${secs}`;
+                }
+            }, 1000);
+        }
+
+        // Pembaruan Informasi Panel UI
+        function updateUI() {
+            document.getElementById('ui-level').innerText = gameState.level;
+            document.getElementById('ui-lives').innerText = '❤️'.repeat(Math.max(0, gameState.lives));
+        }
+
+        // Manajemen Penyimpanan Otomatis
+        function saveGameProgress() {
+            let progressData = {
+                level: gameState.level,
+                score: gameState.score,
+                timer: gameState.timer
+            };
+            localStorage.setItem('mathemaquest_save', JSON.stringify(progressData));
+        }
+
+        function loadGameProgress() {
+            let saved = localStorage.getItem('mathemaquest_save');
+            if (saved) {
+                let parsed = JSON.parse(saved);
+                gameState.level = parsed.level;
+                gameState.score = parsed.score;
+                gameState.timer = parsed.timer;
+                updateUI();
+            }
+            updateLeaderboardView();
+        }
+
+        // Pengelolaan Sistem Skor Akhir & Papan Peringkat
+        function gameOver() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timerInterval);
+            playTone(80, 'sawtooth', 0.8, 0.3);
+            
+            // Menggunakan setTimeout agar render UI (nyawa habis) selesai dulu sebelum prompt muncul
+            setTimeout(() => {
+                let name = prompt(`GAME OVER! Kamu bertahan hingga Level ${gameState.level}.\nMasukkan nama kamu untuk Papan Peringkat:`) || "Anonim Player";
+                
+                let leaderboard = JSON.parse(localStorage.getItem('mathemaquest_leaderboard')) || [];
+                leaderboard.push({ name: name, score: gameState.score, level: gameState.level, time: gameState.timer });
+                leaderboard.sort((a, b) => b.level - a.level || b.score - a.score);
+                localStorage.setItem('mathemaquest_leaderboard', JSON.stringify(leaderboard.slice(0, 5)));
+
+                localStorage.removeItem('mathemaquest_save');
+                location.reload();
+            }, 100);
+        }
+
+        function updateLeaderboardView() {
+            let leaderboard = JSON.parse(localStorage.getItem('mathemaquest_leaderboard')) || [];
+            let listContainer = document.getElementById('leaderboard-list');
+            if(leaderboard.length > 0) {
+                listContainer.innerHTML = leaderboard.map(player => 
+                    `<li><strong>${player.name}</strong> - Lvl ${player.level} (${player.score} Pts)</li>`
+                ).join('');
+            }
+        }
+
+        // Fitur Interaksi Aksesibilitas UI Kontrol Tombol Samping
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            document.body.classList.toggle('dark-theme');
+        });
+
+        document.getElementById('mute-toggle').addEventListener('click', () => {
+            gameState.isMuted = !gameState.isMuted;
+            document.getElementById('mute-toggle').innerText = gameState.isMuted ? '🔇 Unmute' : '🔊 Mute';
+        });
+
+        // Mobile Virtual D-Pad
+        const bindMobileBtn = (id, keyName) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+            btn.addEventListener('mousedown', () => { keys[keyName] = true; });
+            btn.addEventListener('mouseup', () => { keys[keyName] = false; });
+        };
+        bindMobileBtn('ctrl-up', 'arrowup');
+        bindMobileBtn('ctrl-down', 'arrowdown');
+        bindMobileBtn('ctrl-left', 'arrowleft');
+        bindMobileBtn('ctrl-right', 'arrowright');
+        document.getElementById('ctrl-action').addEventListener('click', () => {
+            if (!document.getElementById('puzzle-modal').classList.contains('hidden-element')) {
+                checkUserAnswer();
+            }
+        });
+
+        // Tombol Unduh Instan File Game
+        document.getElementById('download-btn').addEventListener('click', () => {
+            let htmlContent = document.documentElement.outerHTML;
+            let blob = new Blob([htmlContent], { type: 'text/html' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'mathema_quest_game.html';
+            a.click();
+        });
+    </script>
 </body>
 </html>
