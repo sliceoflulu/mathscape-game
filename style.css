@@ -1,0 +1,202 @@
+/* Variabel CSS untuk Sistem Tema Mudah (Light & Dark Mode) */
+:root {
+    --bg-primary: #121214;
+    --bg-secondary: #1a1a1e;
+    --text-main: #f3f4f6;
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    --danger-color: #ef4444;
+    --success-color: #10b981;
+    --border-ui: #374151;
+}
+
+body.light-theme {
+    --bg-primary: #f3f4f6;
+    --bg-secondary: #ffffff;
+    --text-main: #111827;
+    --accent-color: #4f46e5;
+    --accent-hover: #4338ca;
+    --border-ui: #d1d5db;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Courier New', Courier, monospace; /* Gaya font retro ala game indie */
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+header {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-ui);
+}
+
+.game-title {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.controls-panel {
+    display: flex;
+    gap: 10px;
+}
+
+.btn, .btn-success, .icon-btn {
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: transform 0.1s ease;
+}
+
+.btn { background: var(--accent-color); color: white; }
+.btn:hover { background: var(--accent-hover); }
+.btn-success { background: var(--success-color); color: white; }
+.icon-btn { background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-ui); }
+
+.btn:active, .btn-success:active { transform: scale(0.95); }
+
+/* Layout Grid Game Workspace */
+.game-container {
+    display: flex;
+    gap: 20px;
+    max-width: 1100px;
+    width: 100%;
+    padding: 20px;
+}
+
+.canvas-wrapper {
+    position: relative;
+    flex: 3;
+    background: #000;
+    border: 4px solid var(--border-ui);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated; /* Menjaga ketajaman grafis piksel retro */
+}
+
+.sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.status-box, .leaderboard-box {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-ui);
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.status-box h3, .leaderboard-box h3 {
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 5px;
+}
+
+.status-box p { margin: 8px 0; font-size: 16px; }
+.leaderboard-box ol { padding-left: 20px; }
+.leaderboard-box li { margin: 5px 0; font-size: 14px; }
+
+/* Overlay Pop-up Puzzle */
+.hidden-element { display: none !important; }
+#puzzle-modal {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    padding: 30px;
+    border: 3px solid var(--accent-color);
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-ui);
+    color: var(--text-main);
+    font-size: 18px;
+    text-align: center;
+}
+
+/* Loading Screen Animation */
+.overlay {
+    position: fixed;
+    top:0; left:0; width:100vw; height:100vh;
+    background: #0a0a0c;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loader-content { text-align: center; color: white;}
+.loader-content h1 { font-size: 36px; margin-bottom: 10px; color: var(--accent-color); letter-spacing: 3px;}
+.progress-bar { width: 300px; height: 10px; background: #222; margin: 20px auto; border-radius: 5px; overflow: hidden; }
+.progress-fill { width: 0%; height: 100%; background: var(--accent-color); transition: width 0.1s linear;}
+.btn.disabled { background: #444; color: #888; cursor: not-allowed; }
+
+/* Pengaturan Tampilan Mobile (Responsivitas) */
+.mobile-controls {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-top: 15px;
+    padding-bottom: 20px;
+}
+
+.mobile-controls .row { display: flex; gap: 20px; }
+.ctrl-btn {
+    width: 60px; height: 60px;
+    font-size: 24px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-ui);
+    border-radius: 50%;
+    color: var(--text-main);
+    display: flex; justify-content: center; align-items: center;
+    user-select: none;
+}
+
+@media (max-width: 768px) {
+    .game-container { flex-direction: column; }
+    .mobile-controls { display: flex; }
+}
